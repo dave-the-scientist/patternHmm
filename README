@@ -1,0 +1,123 @@
+===========
+Pattern HMM
+===========
+
+This Pattern HMM package implements a profile hidden Markov model useful for 
+identifying patterns of symbols in a sequence of strings.
+
+
+Installation
+============
+
+This package is small, containing several Python files and one C-extension. 
+Installation is done using the standard ``distutils`` software, and so should 
+be relatively straight forward. Unpack the distribution file (either the 
+.tar.gz or the .zip file), and change directory into it. Then install the 
+package with the command:
+
+``python setup.py install``
+
+You may need super-user privileges to create the necessary directories, in 
+which case the command would be: 
+
+``sudo python setup.py install``
+
+On Windows the command should be just:
+
+``setup.py install``
+
+This should compile the C-extension and move all of the relevant files to your 
+default location for third-party Python modules:
+
+* On Unix this should be ``/usr/local/lib/pythonX.Y/site-packages`` or 
+  ``/usr/local/lib/pythonX.Y/dist-packages``.
+
+* On MacOSX this should be ``/Library/Python/X.Y/site-packages``.
+
+* On Windows this should be ``C:\PythonXY\Lib\site-packages``.
+
+Once this is finished, you may delete the distribution folder.
+
+
+Usage
+=====
+
+As an example, let us say that we are searching for the pattern "ABCDE" in 
+some sequence of characters. This pattern must be defined using a model object,
+which itself is defined by 2 dictionaries, one describing the emission 
+probabilities of the match states, and the other describing the transition 
+probabilities between model states. This package includes a function that 
+creates a template model file to fill out. It is meant to be accessed from the 
+Python interpreter as::
+
+    >>> import patternHmm
+    >>> patternHmm.generate_model_file(5, 'test_model.py')
+
+Here, the first argument is an integer, indicating how long your pattern is (5
+in our example). The second argument is a path describing where to save the 
+template file. If you open ``test_model.py``, you can see the default parameters
+already filled out. These can be changed as desired to fine tune the model, but
+should work just fine as they are for this example. If you were searching for
+some other pattern, you would probably modify the ``matchEmissions`` dictionary,
+substituting your particular symbols (letters or numbers) instead of just the
+ascending alphabet.
+
+The typical way of using this model file is to then create a new Python file, 
+the run file. This file should contain the sequence of interest, import the 
+model file, and then use one of the model functions to find the pattern matches 
+within the sequence. It might look something like::
+
+    import test_model
+    
+    model = test_model.model
+    sequence = 'efABgCDEhiACjkDEfg'
+    
+    model.print_matches(sequence)
+
+This will output the 2 matches that the model found within the sequence, 
+aligned to the sequence of predicted match and insert states. The other common 
+model method is ``model.print_path(sequence)``, which just prints the full 
+alignment of the sequence and the predicted sequence of states that might have 
+generated it. If this package is being used as part of some other program, there
+are versions of those 2 methods that don't print anything, but instead just 
+return the information: ``model.find_matches(sequence)`` and 
+``model.find_path(sequence)``. For a more complete reference, see the
+documentation in the ``patterHmm/__init__.py`` file.
+
+
+Usage Notes
+===========
+
+* The symbols defined in the ``matchEmissions`` dictionary in the model file can
+  be any length of characters, but may only contain alpha-numeric characters.
+
+* The sequence can be either a string or a list of symbols. However, if any of 
+  the symbols in your pattern are longer than one character, the sequence must 
+  be a list.
+
+* A match state can emit any number of possible symbols, not just one. For
+  example, if we wanted the third symbol in our pattern to be either 'C' or
+  'Z', the third entry in the ``matchEmissions`` dictionary should be modified
+  to ``'M3': {'C':1.0, 'Z':1.0},``. 
+
+* If the most important part of our pattern is the 'B', we might attribute it
+  more weight by modifying the second entry in the ``matchEmissions`` dictionary
+  to ``'M2': {'B':1.5},``. 
+
+* If the C extension was compiled but is not working correctly, or if you wish
+  to use the Python implementation for some reason (described in the section
+  below), it can be done by changing the first line of your model file to read:
+  ``from patternHmm.pyProfileHmm import Hmm``. 
+
+
+Implementation
+==============
+
+This package implements two versions of the Viterbi algorithm to predict the
+most likely sequence of states that might generate some given sequence. The
+default version performs the calculations in C (Viterbi.c), but if there is a 
+problem compiling the extension into a .so format, the program will
+automatically use the Python implementation (pyProfileHmm.py) instead. This 
+version requires numpy to be installed, and is ~200 x slower than the C version,
+in addition to using more memory. If the C implementation is being used, there
+is no requirement that numpy be installed on the machine.
