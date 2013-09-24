@@ -1,0 +1,7 @@
+# General types to ignore
+*.pyc
+*.so
+
+# Specific files to ignore
+MANIFEST
+setup.py
