@@ -9,6 +9,9 @@ identifying patterns of symbols in a sequence of strings.
 Installation
 ============
 
+NOTE: This package is not set up to be installed by cloning or pulling from GitHub.
+Instead, download the latest release file.
+
 This package is small, containing several Python files and one C-extension. 
 Installation is done using the standard ``distutils`` software, and so should 
 be relatively straight forward. Unpack the distribution file (either the 
